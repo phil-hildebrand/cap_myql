@@ -1,0 +1,68 @@
+#!/bin/sh 
+# vim:ft=sh:et
+### BEGIN INIT INFO
+# Provides:          db-heartbeat
+# Required-Start:    $remote_fs $local_fs $syslog
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Start/stop percona heartbeat
+# Description:       percona heartbeat monitors replicadtion lag for mysql servers
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/pt-heartbeat
+NAME=pt-heartbeat
+DESC="Percona Heartbeat Tool"
+
+SCRIPT_NAME=/etc/init.d/db-heartbeat
+
+PRIMARY_MASTER_HOST=[MASTER IP or HOSTNAME]
+PRIMARY_MASTER_SID=[SID]
+MASTER_IP=[IP ADDRESS OF MASTER]
+MASTER_HOST=[MASTER IP or HOSTNAME]
+MASTER_SID=[SID]
+SLAVE_HOST=[SLAVE IP or HOSTNAME]
+SLAVE_SID=[SID]
+HEARTBEAT_DB=heartbeat
+HEARTBEAT_USER=heartbeat
+HEARTBEAT_PW=heartbeat
+
+UPDATE_OPTIONS=" -h $MASTER_HOST -D $HEARTBEAT_DB -u $HEARTBEAT_USER -p $HEARTBEAT_PW --master-server-id=${MASTER_SID} --update --daemonize"
+MONITOR_OPTIONS=" -h $MASTER_HOST -D $HEARTBEAT_DB -u $HEARTBEAT_USER -p $HEARTBEAT_PW --master-server-id=${SLAVE_SID} --monitor  --file /tmp/sql-slave.heartbeat --daemonize"
+
+SLAVE_UPDATE_OPTIONS=" -h $SLAVE_HOST -D $HEARTBEAT_DB -u $HEARTBEAT_USER -p $HEARTBEAT_PW --master-server-id=${SLAVE_SID} --update --daemonize"
+SLAVE_MONITOR_OPTIONS=" -h $SLAVE_HOST -D $HEARTBEAT_DB -u $HEARTBEAT_USER -p $HEARTBEAT_PW --master-server-id=${MASTER_SID} --monitor  --file /tmp/sql-slave.heartbeat --daemonize"
+
+test -f "$DAEMON" || exit 0
+umask 022
+
+set -e 
+status=0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start|restart)
+                log_daemon_msg "Starting $DESC" "$NAME"
+	        if [ `ifconfig -a | grep ${MASTER_IP} | wc -l` -gt 0 ]
+	        then
+                	start-stop-daemon --start --quiet --exec $DAEMON -- $UPDATE_OPTIONS || status=$?
+                	start-stop-daemon --start --quiet --exec $DAEMON -- $MONITOR_OPTIONS || status=$?
+	        else
+                	start-stop-daemon --start --quiet --exec $DAEMON -- $SLAVE_UPDATE_OPTIONS || status=$?
+                	start-stop-daemon --start --quiet --exec $DAEMON -- $SLAVE_MONITOR_OPTIONS || status=$?
+	        fi
+                log_end_msg $status
+        ;;
+  stop)
+        /usr/bin/pkill -f pt-heartbeat
+        ;;
+  *)
+        echo "Usage: $SCRIPT_NAME {start|stop|restart}" >&2
+        exit 3
+        ;;
+esac
+
+exit $status
+

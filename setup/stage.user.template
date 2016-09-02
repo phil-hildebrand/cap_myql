@@ -1,0 +1,3 @@
+root:[staging root password]
+slave:[staging slave password]
+dba:[staging dba password]

@@ -1,0 +1,9 @@
+#
+# Cron job for custom vanguard monitors
+#
+PATH=/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/sbin
+#
+#Skip any vanguard replication errors
+#
+# * * * * * root 2>&1 /root/bin/repl_skip.sh >> /backup/repl_skip.log
+# 0 8 * * * root 2>&1 bash -c 'if [ `grep repl_skip.sh /etc/cron.d/ignore_slave_errors|grep ^#|wc -l` -lt 1 ]; then echo "Auto skip replication is enabled on `hostname`" | mailx -s "Warning - Auto Skip Replication" change_email@address; fi'

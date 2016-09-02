@@ -1,0 +1,25 @@
+MySQL backup tool
+
+Please edit the script and set your local variables appropriately.  
+
+*** Usage ***
+
+Copy script to /root/mysql_backup_daily.sh & make sure it's executable.
+
+Command-line:
+
+* bash mysql_backup_daily.sh
+
+Cron:
+
+Add this to root's cron:
+
+# Add to make backups go at 2AM
+0 2 * * * /root/mysql_backup_daily.sh 2>&1 > /dev/null
+
+
+*** Caveats ***
+
+* Cannot use innodb=force in my.cnf -- this confuses xtrabackup_55 :-(
+
+

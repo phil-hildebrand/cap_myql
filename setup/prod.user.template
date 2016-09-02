@@ -1,0 +1,3 @@
+root:[prod root password]
+slave:[prod slave password]
+dba:[prod dba password]

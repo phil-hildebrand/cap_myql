@@ -1,0 +1,6 @@
+#
+# Daily MySQL Backups
+#
+MAILTO="root@localhost"
+#
+0 0 * * * root /root/bin/mysql_backup_daily.sh 

@@ -1,0 +1,51 @@
+
+# This is a process diagram as to how the backup program works in preparation for
+# rewriting it.
+
+* FIRST: Specify configuration settings and/or configuration file
+
+Function definitions:
+  * logit - write log message normally
+  * bail - 
+  * cleanup - remove old backups from backup directory
+  ** log message
+  ** Mail failure log
+  ** exit
+  
+Main Function Flow:
+
+1. copy log to backup if exists AND begin logging
+2. determine xtrabackup version
+3. test backupdir existance, cleanup() and bail() on failure
+4. check size of last backup
+  a.  Log if missing
+
+5. determine free space on drive
+  a.  cleanup() and bail() if disk space is less than previous backup size
+
+6. remove previous uncompressed archive directory if compression is enabled
+7. set zabbix = doing a backup (if enabled)
+8. perform the actual backup
+  a.  cleanup() and bail() if the backup appears to have been done already
+  b.  log creation of backup
+  c.  run backup tool
+    I. innobackupex --ibbackup=$xtrabackup_version --slave-info /path/to/backup
+    II. cleanup() and bail() on failure
+  d.  prepare the backup for deployment
+    I. innobackupex --ibbackup=$extrabackup_version --apply-log /path/to/backup
+    II. cleanup() and bail() on failure
+  e.  compress the backup if enabled
+
+9. Perform backup retention tasks [cleanup()]
+  a. if $retention not defined or zero, 
+    I. Log "No rotation, unlimited retention."
+  b. if $retention > 0
+    I. Find the # of backups, if greater than $retention then remove old ones
+    II. Log that.
+
+10. Archive to remote host if set by configuration
+  a. scp most recent archive to $backuphost and put in $backupdir
+
+
+
+
